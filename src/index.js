@@ -6,16 +6,27 @@ import morgan from "morgan";
 import express from "express";
 import session from "express-session";
 
+import routes from "./routes/index";
+
 const { PORT } = process.env;
 const noop = () => {};
 const sleep = promisify(setTimeout);
 const app = express();
 
 app.use(session({ secret: "super secret", saveUninitialized: false }));
-app.use(morgan("dev"));
+app.use(morgan("combined"));
 
 app.all(
   "*",
+  // getTestConfig
+  // IncrementTestRunNumber
+  // Determine if request needs to be delayed based on the config.
+  // Find corresponding Project/Test Scenario
+  // If last scenario response, reset session
+  function findRoute(req, res, next) {
+    console.log(routes);
+    next();
+  },
   async function first(req, res, next) {
     await sleep(5000);
     next();
@@ -24,7 +35,8 @@ app.all(
     debugger;
 
     next();
-  }
+  },
+  morgan("dev")
 );
 
 app.get("/", async (req, res) => {
