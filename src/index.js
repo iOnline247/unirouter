@@ -57,12 +57,8 @@ app.all(
     req.session.unirouter.scenarioRuns[scenarioKey] =
       (req.session.unirouter.scenarioRuns[scenarioKey] || 0) + 1;
 
-    console.log(req.session.unirouter);
     next();
   },
-  // Determine if request needs to be delayed based on the config.
-  // Find corresponding Project/Test Scenario
-  // If last scenario response, reset session
   function findRoute(req, res, next) {
     const { project, scenario, scenarioKey } = req.session.unirouter;
     let route;
@@ -70,6 +66,7 @@ app.all(
     try {
       route = routes[project][scenario];
 
+      // project may be defined, but not scenario.
       if (!route) {
         throw new Error(
           `Couldn't find the ${scenarioKey} in the 'routes' directory.`
