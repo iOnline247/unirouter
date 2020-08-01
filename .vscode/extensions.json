@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "christian-kohler.npm-intellisense",
+    "coenraads.bracket-pair-colorizer",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "waderyan.nodejs-extension-pack"
+  ]
+}
