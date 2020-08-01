@@ -4,4 +4,5 @@ const routes = {
   myProject,
 };
 
-export default { routes };
+// eslint-disable-next-line import/prefer-default-export
+export { routes };
