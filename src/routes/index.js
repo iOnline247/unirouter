@@ -1,4 +1,4 @@
-import myProject from "./myProject";
+import myProject from "./myProject.js";
 
 const routes = {
   myProject,
