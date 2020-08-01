@@ -1,5 +1,5 @@
 {
-  "project": "myProject",
-  "scenario": "scenario1",
-  "delaysInMs": [0, 10000, 0, 0, 5000, 0]
+  "project": "sentinel",
+  "scenario": "bossSauce",
+  "delaysInMs": [30000, 10000, 0, 0, 5000, 0]
 }
