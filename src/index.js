@@ -50,6 +50,9 @@ app.use(
 app.all(
   "*/:route",
   async function getTestConfig(req, res, next) {
+    // TODO:
+    // Remove this logic from the route and into
+    // a file watcher.
     console.log(chalk`
 {blue ${new Date().toISOString()}}
 `);
