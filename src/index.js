@@ -2,19 +2,23 @@ import { promisify } from "util";
 import { readFile } from "fs/promises";
 import path from "path";
 
-import merge from 'deepmerge';
+import merge from "deepmerge";
 import morgan from "morgan";
 import chalk from "chalk";
 import express from "express";
 import session from "express-session";
 
-import routes from "./routes/index.js";
+import { routes } from "./routes/index.js";
 
 const { PORT } = process.env;
+const noop = () => {};
 const sleep = promisify(setTimeout);
 const app = express();
+const relConfigFilePath = "./src/testConfig.json";
 
-app.use(session({ secret: "super secret", saveUninitialized: false }));
+app.use(
+  session({ secret: "super secret", resave: false, saveUninitialized: false })
+);
 app.use(morgan("combined"));
 
 app.all(
@@ -28,26 +32,30 @@ app.all(
 
     try {
       const rawConfig = await readFile(
-        path.join(process.cwd(), "./src/testConfig.json")
+        path.join(process.cwd(), relConfigFilePath)
       );
 
       testConfig = JSON.parse(rawConfig.toString("utf8"));
     } catch (err) {
+      // TODO:
+      // Make this prettyish
       console.error(err);
-    }
-    
-    const prevScenarioRuns = req.session?.unirouter?.scenarioRuns;
-
-    req.session.unirouter = merge({ scenarioRuns: {} }, testConfig);
-    
-    if (prevScenarioRuns) {
-      req.session.unirouter.scenarioRuns = prevScenarioRuns;
+      res.status(500).send(`The ${relConfigFilePath} is missing.`);
     }
 
-    const scenarioRunNumKey = `${testConfig.project}:${testConfig.scenario}`;
+    const scenarioRuns = req.session?.unirouter?.scenarioRuns || {};
+    const scenarioKey = `${testConfig.project}:${testConfig.scenario}`;
 
-    req.session.unirouter.scenarioRuns[scenarioRunNumKey] =
-      (req.session.unirouter.scenarioRuns[scenarioRunNumKey] || 0) + 1;
+    req.session.unirouter = merge(
+      {
+        ...testConfig,
+        scenarioKey,
+      },
+      { scenarioRuns }
+    );
+
+    req.session.unirouter.scenarioRuns[scenarioKey] =
+      (req.session.unirouter.scenarioRuns[scenarioKey] || 0) + 1;
 
     console.log(req.session.unirouter);
     next();
@@ -56,26 +64,59 @@ app.all(
   // Find corresponding Project/Test Scenario
   // If last scenario response, reset session
   function findRoute(req, res, next) {
-    console.log(routes);
+    const { project, scenario, scenarioKey } = req.session.unirouter;
+    let route;
 
-    // const route = routes[]
+    try {
+      route = routes[project][scenario];
+
+      if (!route) {
+        throw new Error(
+          `Couldn't find the ${scenarioKey} in the 'routes' directory.`
+        );
+      }
+
+      req.session.unirouter.route = route;
+
+      console.log(`Route found: ${scenarioKey}`);
+      next();
+    } catch (err) {
+      const errorMsg = `Couldn't find the ${scenarioKey} in the 'routes' directory.`;
+
+      console.error(errorMsg);
+      console.error(err);
+      res.status(500).send(errorMsg);
+    }
+  },
+  async function delayRequest(req, res, next) {
+    const { delaysInMs, route } = req.session.unirouter;
+    const runNumber =
+      req.session.unirouter.scenarioRuns[req.session.unirouter.scenarioKey];
+    const delay = delaysInMs[runNumber - 1];
+
+    req.session.unirouter.isLastScenarioResponse =
+      route.responses.length === runNumber;
+
+    await sleep(delay);
     next();
   },
-  async function first(req, res, next) {
-    await sleep(5000);
-    next();
-  },
-  function resetTestScenario(req, res, next) {
-    // TODO:
-    // Add this logic to the end of the middleware chain
-    // if (req.session.PROJECT_NAME) {
-    //   req.session.regenerate(noop);
-    // }
+  function sendResponse(req, res, next) {
+    const { route } = req.session.unirouter;
+    const runNumber =
+      req.session.unirouter.scenarioRuns[req.session.unirouter.scenarioKey];
+    const { status, response } = route.responses[runNumber - 1];
 
     // TODO:
     // Support multiple Content-Types
     // http://expressjs.com/en/4x/api.html#res.format
-    res.status(200).send({ test: true });
+    res.status(status).json(response);
+    next();
+  },
+  function resetTestScenario(req, res, next) {
+    if (req.session.unirouter.isLastScenarioResponse) {
+      console.log("Destroying session...");
+      req.session.destroy(noop);
+    }
     next();
   },
   morgan("dev")
