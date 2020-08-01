@@ -7,19 +7,45 @@ import morgan from "morgan";
 import chalk from "chalk";
 import express from "express";
 import session from "express-session";
+import csp from "helmet-csp";
+import cors from "cors";
 
 import { routes } from "./routes/index.js";
 
-const { PORT } = process.env;
+const { PORT = 3000 } = process.env;
 const noop = () => {};
 const sleep = promisify(setTimeout);
 const app = express();
 const relConfigFilePath = "./src/testConfig.json";
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "*");
+  next();
+});
 app.use(
-  session({ secret: "super secret", resave: false, saveUninitialized: false })
+  session({
+    secret: "super secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { sameSite: "strict" },
+  })
 );
-app.use(morgan("combined"));
+app.use(
+  cors({
+    origin(origin, callback) {
+      return callback(null, true);
+    },
+  })
+);
+app.use(
+  csp({
+    directives: {
+      scriptSrc: ["'unsafe-inline'", "'unsafe-eval'"],
+    },
+  })
+);
 
 app.all(
   "*/:route",
@@ -123,4 +149,4 @@ app.get("/", async (req, res) => {
   res.send("<h1>Welcome</h1>");
 });
 
-app.listen(PORT || 3000);
+app.listen(PORT);

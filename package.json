@@ -31,9 +31,11 @@
   "homepage": "https://github.com/iOnline247/unirouter#readme",
   "dependencies": {
     "chalk": "^4.1.0",
+    "cors": "^2.8.5",
     "deepmerge": "^4.2.2",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
+    "helmet-csp": "^2.10.0",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
