@@ -12,7 +12,7 @@ const config = new ConfigManager(configFilePath);
 
 config.watch();
 
-function getTestConfig(req, res, next) {
+function setConfigOnRequest(req, res, next) {
   //     console.log(chalk`
   // {blue ${new Date().toISOString()}}
   // `);
@@ -80,6 +80,10 @@ function sendResponse(req, res, next) {
     req.session.unirouter.scenarioRuns[req.session.unirouter.scenarioKey];
   const { status, response } = route.responses[runNumber - 1];
 
+  if (req.session.unirouter.isLastScenarioResponse) {
+    console.log("Destroying session...");
+    req.session.destroy(noop);
+  }
   // TODO:
   // Support multiple Content-Types
   // http://expressjs.com/en/4x/api.html#res.format
@@ -87,20 +91,11 @@ function sendResponse(req, res, next) {
   next();
 }
 
-function resetTestScenario(req, res, next) {
-  if (req.session.unirouter.isLastScenarioResponse) {
-    console.log("Destroying session...");
-    req.session.destroy(noop);
-  }
-  next();
-}
-
 const unirouterMiddlewares = [
-  getTestConfig,
+  setConfigOnRequest,
   findRoute,
   delayRequest,
   sendResponse,
-  resetTestScenario,
   morgan("dev"),
 ];
 
