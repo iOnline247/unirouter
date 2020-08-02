@@ -1,5 +1,4 @@
 import { promisify } from "util";
-import { readFile } from "fs/promises";
 import path from "path";
 
 import merge from "deepmerge";
@@ -10,13 +9,23 @@ import session from "express-session";
 import csp from "helmet-csp";
 import cors from "cors";
 
+import ConfigManager from "./utils/configManager.js";
 import { routes } from "./routes/index.js";
 
 const { PORT = 3000 } = process.env;
 const noop = () => {};
 const sleep = promisify(setTimeout);
 const app = express();
-const relConfigFilePath = "./src/testConfig.json";
+const configFilePath = path.join(process.cwd(), "./src/config.json");
+const config = new ConfigManager(configFilePath);
+
+// TODO:
+// Remove this hack.
+// https://stackoverflow.com/a/50477084
+// https://stackoverflow.com/a/31268370
+setTimeout(() => {
+  config.watch();
+}, 1000);
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -50,28 +59,10 @@ app.use(
 app.all(
   "*/:route",
   async function getTestConfig(req, res, next) {
-    // TODO:
-    // Remove this logic from the route and into
-    // a file watcher.
     console.log(chalk`
 {blue ${new Date().toISOString()}}
 `);
-
-    let testConfig;
-
-    try {
-      const rawConfig = await readFile(
-        path.join(process.cwd(), relConfigFilePath)
-      );
-
-      testConfig = JSON.parse(rawConfig.toString("utf8"));
-    } catch (err) {
-      // TODO:
-      // Make this prettyish
-      console.error(err);
-      res.status(500).send(`The ${relConfigFilePath} is missing.`);
-    }
-
+    const testConfig = config.get();
     const scenarioRuns = req.session?.unirouter?.scenarioRuns || {};
     const scenarioKey = `${testConfig.project}:${testConfig.scenario}`;
 
@@ -149,7 +140,9 @@ app.all(
 );
 
 app.get("/", async (req, res) => {
-  res.send("<h1>Welcome</h1>");
+  res.send(
+    `<h1>Hola, mundo desde unirouter. <span style="color: #FF4136;">&#9829;</span></h1>`
+  );
 });
 
 app.listen(PORT);
