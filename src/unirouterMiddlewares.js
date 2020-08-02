@@ -4,7 +4,7 @@ import merge from "deepmerge";
 import morgan from "morgan";
 
 import { noop, sleep } from "./utils/common.js";
-import Logger from "./utils/logger.js";
+// import Logger from "./utils/logger.js";
 import ConfigManager from "./utils/configManager.js";
 import { routes } from "./routes/index.js";
 
@@ -13,11 +13,14 @@ const config = new ConfigManager(configFilePath);
 
 config.watch();
 
-function setLoggerOnRequest(req, res, next) {
-  req.logger = new Logger(req.id);
+morgan.token("id", (req) => req.id);
+morgan.token("scenarioKey", (req) => req.scenarioKey);
 
-  next();
-}
+// function setLoggerOnRequest(req, res, next) {
+//   req.logger = new Logger(req.id);
+
+//   next();
+// }
 
 function setConfigOnSession(req, res, next) {
   //     console.log(chalk`
@@ -56,14 +59,12 @@ function findRoute(req, res, next) {
     }
 
     req.session.unirouter.route = route;
+    req.scenarioKey = scenarioKey;
 
-    console.log(`Route found: ${scenarioKey}`);
     next();
   } catch (err) {
     const errorMsg = `Couldn't find the ${scenarioKey} in the 'routes' directory.`;
 
-    console.error(errorMsg);
-    console.error(err);
     res.status(500).send(errorMsg);
   }
 }
@@ -99,9 +100,11 @@ function sendResponse(req, res, next) {
 }
 
 const unirouterMiddlewares = [
-  setLoggerOnRequest,
+  morgan("[:date[iso]] :id Request initiated..."),
+  // setLoggerOnRequest,
   setConfigOnSession,
   findRoute,
+  morgan("[:date[iso]] :id Route found :scenarioKey"),
   delayRequest,
   sendResponse,
   morgan("dev"),
