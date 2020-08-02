@@ -9,7 +9,7 @@ import Logger from "./logger.js";
 const importedConfig = require("../config.json");
 
 const config = merge({}, importedConfig);
-const logger = new Logger();
+// const logger = new Logger();
 
 // Interesting topics.
 // https://stackoverflow.com/a/50477084
