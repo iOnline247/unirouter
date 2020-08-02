@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Mock scenarios for API tests",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "build": "npm run clean:dist && tsc",
     "clean:dist": "del-cli ./dist ./.ts",
