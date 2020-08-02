@@ -4,6 +4,7 @@ import merge from "deepmerge";
 import morgan from "morgan";
 
 import { noop, sleep } from "./utils/common.js";
+import Logger from "./utils/logger.js";
 import ConfigManager from "./utils/configManager.js";
 import { routes } from "./routes/index.js";
 
@@ -12,7 +13,13 @@ const config = new ConfigManager(configFilePath);
 
 config.watch();
 
-function setConfigOnRequest(req, res, next) {
+function setLoggerOnRequest(req, res, next) {
+  req.logger = new Logger(req.id);
+
+  next();
+}
+
+function setConfigOnSession(req, res, next) {
   //     console.log(chalk`
   // {blue ${new Date().toISOString()}}
   // `);
@@ -81,7 +88,7 @@ function sendResponse(req, res, next) {
   const { status, response } = route.responses[runNumber - 1];
 
   if (req.session.unirouter.isLastScenarioResponse) {
-    console.log("Destroying session...");
+    // console.log("Destroying session...");
     req.session.destroy(noop);
   }
   // TODO:
@@ -92,7 +99,8 @@ function sendResponse(req, res, next) {
 }
 
 const unirouterMiddlewares = [
-  setConfigOnRequest,
+  setLoggerOnRequest,
+  setConfigOnSession,
   findRoute,
   delayRequest,
   sendResponse,
