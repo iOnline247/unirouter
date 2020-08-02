@@ -2,32 +2,40 @@ import fs from "fs";
 import { readFile } from "fs/promises";
 
 import chalk from "chalk";
+import merge from "deepmerge";
 
+const importedConfig = require("../config.json");
+
+const config = merge({}, importedConfig);
+
+// Interesting topics.
+// https://stackoverflow.com/a/50477084
+// https://stackoverflow.com/a/31268370
 class ConfigManager {
   #config;
+
+  #isWatched;
 
   filePath;
 
   constructor(filePath) {
-    return (async () => {
-      const rawConfig = await readFile(filePath);
-
-      this.filePath = filePath;
-      this.#config = JSON.parse(rawConfig.toString("utf8"));
-
-      return this;
-    })();
+    this.filePath = filePath;
+    this.#config = config;
   }
 
   watch() {
+    if (this.#isWatched) {
+      return;
+    }
+
     console.log(chalk`Watching for file changes on: ${this.filePath}`);
 
     fs.watch(this.filePath, async (event, fileName) => {
       if (fileName && event === "change") {
         try {
-          this.#config = JSON.parse(
-            await readFile(this.filePath).toString("utf8")
-          );
+          const jsonConfig = (await readFile(this.filePath)).toString("utf8");
+
+          this.#config = JSON.parse(jsonConfig);
         } catch (err) {
           this.#config = {
             project: "",
@@ -37,37 +45,13 @@ class ConfigManager {
         }
       }
     });
+
+    this.#isWatched = true;
   }
 
   get() {
     return this.#config;
   }
 }
-
-// async function here(filePath) {
-//   const rawConfig = await readFile(filePath);
-
-//         testConfig = JSON.parse(rawConfig.toString("utf8"));
-// }
-
-// function getConfig(filePath) {
-//   if (!testConfig) {
-//     testConfig = here(filePath);
-//   }
-
-//   return testConfig;
-// }
-
-// function watchFile(filePath) {
-//   console.log(chalk`Watching for file changes on: ${filePath}`);
-
-//   fs.watch(filePath, async (event, fileName) => {
-//     if (fileName && event === "change") {
-//       try {
-//         // testConfig =
-//       } catch (err) {}
-//     }
-//   });
-// }
 
 export default ConfigManager;
