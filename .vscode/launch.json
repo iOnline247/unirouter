@@ -9,7 +9,7 @@
       "request": "launch",
       "name": "Debug File",
       "program": "${file}",
-      // "runtimeArgs": ["--harmony"], //"-r", "esm"],
+      "runtimeArgs": ["--harmony"], //"-r", "esm"],
       "sourceMaps": true,
       "smartStep": true,
       "skipFiles": [
