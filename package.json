@@ -35,7 +35,8 @@
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "helmet-csp": "^2.10.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@types/node": "^14.0.24",
