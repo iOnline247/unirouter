@@ -1,4 +1,5 @@
 import express from "express";
+import addRequestId from "express-request-id";
 import session from "express-session";
 import csp from "helmet-csp";
 import cors from "cors";
@@ -8,6 +9,7 @@ import unirouterMiddlewares from "./unirouterMiddlewares";
 const { PORT = 3000 } = process.env;
 const app = express();
 
+app.use(addRequestId);
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
