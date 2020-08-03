@@ -8,8 +8,11 @@
       "type": "node",
       "request": "launch",
       "name": "Debug File",
-      "program": "${file}",
+      "program": "${workspaceFolder}/dist/index.js",
       // "runtimeArgs": ["--harmony"], //"-r", "esm"],
+      "env": {
+        "PORT": "3001"
+      },
       "sourceMaps": true,
       "smartStep": true,
       "skipFiles": [
