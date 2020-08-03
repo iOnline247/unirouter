@@ -19,6 +19,7 @@ If you're editor doesn't provide an `F5` debugging experience, run this command:
 The [./src](./src) directory contains the [config.json](./src/config.json) file. This file is used to determine which scenario responses unirouter will use. The config is watched for changes, so the server doesn't have to be restarted when a new scenario needs to be tested.
 
 To change to a new scenario, type the project name and the scenario. Both are case-insensitive.
+**NOTE**: Using the instructions above, the active `config.json` file will be in the `./dist` directory. 
 
 ### Creating a new scenario
 
