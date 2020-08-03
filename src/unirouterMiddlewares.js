@@ -1,32 +1,16 @@
 import path from "path";
 
-import chalk from "chalk";
 import merge from "deepmerge";
-import morgan from "morgan";
 
 import { noop, sleep } from "./utils/common.js";
-// import Logger from "./utils/logger.js";
 import ConfigManager from "./utils/configManager.js";
+import logs from "./utils/logs.js";
 import { routes } from "./routes/index.js";
 
 const configFilePath = path.join(__dirname, "./config.json");
 const config = new ConfigManager(configFilePath);
 
 config.watch();
-
-morgan.token("id", (req) => req.id);
-morgan.token("delay", (req) => `${req.uniReqDelay}`);
-morgan.token("scenarioKey", (req) => req.uniScenarioKey);
-morgan.token(
-  "sessionDestroyed",
-  (req) => `${req.uniSessionDestroyed || false}`
-);
-
-// function setLoggerOnRequest(req, res, next) {
-//   req.logger = new Logger(req.id);
-
-//   next();
-// }
 
 function setConfigOnSession(req, res, next) {
   //     console.log(chalk`
@@ -115,16 +99,14 @@ function sendResponse(req, res, next) {
 }
 
 const unirouterMiddlewares = [
-  morgan("[:date[iso]] :id Request initiated..."),
+  logs.reqInit,
   // setLoggerOnRequest,
   setConfigOnSession,
   findRoute,
-  morgan("[:date[iso]] :id Route found :scenarioKey, will delay for :delay ms"),
+  logs.reqRoute,
   delayRequest,
   sendResponse,
-  morgan(
-    chalk`{blue [:date[iso]]} {yellow :id} :method :url :status Session destroyed - :sessionDestroyed`
-  ),
+  logs.reqOutro,
 ];
 
 export default unirouterMiddlewares;
