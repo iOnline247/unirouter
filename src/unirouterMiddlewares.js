@@ -2,7 +2,7 @@ import path from "path";
 
 import merge from "deepmerge";
 
-import { noop, sleep } from "./utils/common.js";
+import { getValueByKey, noop, sleep } from "./utils/common.js";
 import ConfigManager from "./utils/configManager.js";
 import logs from "./utils/logs.js";
 import { routes } from "./routes/index.js";
@@ -18,7 +18,7 @@ function setConfigOnSession(req, res, next) {
   // `);
   const testConfig = config.get();
   const scenarioRuns = req.session?.unirouter?.scenarioRuns || {};
-  const scenarioKey = `${testConfig.project}:${testConfig.scenario}`;
+  const scenarioKey = `${testConfig.project}:${testConfig.scenario}`.toUpperCase();
 
   req.session.unirouter = merge(
     {
@@ -44,7 +44,9 @@ function findRoute(req, res, next) {
   let route;
 
   try {
-    route = routes[project][scenario];
+    const tests = getValueByKey(project, routes);
+
+    route = getValueByKey(scenario, tests);
 
     // project may be defined, but not scenario.
     if (!route) {

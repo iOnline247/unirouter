@@ -40,6 +40,8 @@ class ConfigManager {
           const jsonConfig = (await readFile(this.filePath)).toString("utf8");
 
           this.#config = JSON.parse(jsonConfig);
+
+          console.log("Config has been updated.");
         } catch (err) {
           this.#config = {
             project: "",
