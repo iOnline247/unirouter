@@ -9,7 +9,6 @@ import { debounce } from "./common.js";
 const importedConfig = require("../config.json");
 
 const config = merge({}, importedConfig);
-// const logger = new Logger();
 
 // Interesting topics.
 // https://stackoverflow.com/a/50477084
@@ -49,6 +48,10 @@ class ConfigManager {
               scenario: "",
               delaysInMs: [],
             };
+
+            console.error(
+              "The config couldn't parse properly. Default config loaded."
+            );
           }
         }
       }, 100)
