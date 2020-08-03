@@ -9,9 +9,10 @@ The responses will be sent in the same order that they're declared within the sc
 
 Open this project with VSCode. Since this project has a `.devcontainer` folder, you'll be prompted to reopen in the container. Once the container is running, at the shell prompt run this command: `npm install`. After the dependencies are installed, press `F5` and the unirouter will be running on port 3000.
 
-### VSCode Only
+### Normal Usage
 
-Open the project within VSCode, run this command: `npm install` in the shell. After the dependencies are installed, press `F5` and the unirouter will be running on port 3000.
+Open the project within VSCode or any editor, run this command: `npm install` in the shell. After the dependencies are installed, press `F5` and the unirouter will be running on port 3000.
+If you're editor doesn't provide an `F5` debugging experience, run this command: `node ./dist/index.js`
 
 ### Changing the `config.json`
 
