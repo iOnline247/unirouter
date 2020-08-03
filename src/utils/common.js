@@ -7,7 +7,7 @@ const getValueByKey = (prop, obj) => {
     (v) => v.toUpperCase() === `${prop}`.toUpperCase()
   );
 
-  return obj[key];
+  return obj[`${key}`];
 };
 const debounce = (func, wait, immediate) => {
   let timeout;
