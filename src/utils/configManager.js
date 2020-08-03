@@ -2,7 +2,6 @@
 import fs from "fs";
 import { readFile } from "fs/promises";
 
-import chalk from "chalk";
 import merge from "deepmerge";
 
 import { debounce } from "./common.js";
@@ -32,7 +31,7 @@ class ConfigManager {
       return;
     }
 
-    console.log(chalk`Watching for file changes on: ${this.filePath}`);
+    console.log(`Watching for file changes on: ${this.filePath}`);
 
     fs.watch(
       this.filePath,
