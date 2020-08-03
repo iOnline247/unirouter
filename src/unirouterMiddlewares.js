@@ -2,7 +2,7 @@ import path from "path";
 
 import merge from "deepmerge";
 
-import { noop, sleep } from "./utils/common.js";
+import { getValueByKey, noop, sleep } from "./utils/common.js";
 import ConfigManager from "./utils/configManager.js";
 import logs from "./utils/logs.js";
 import { routes } from "./routes/index.js";
@@ -13,12 +13,9 @@ const config = new ConfigManager(configFilePath);
 config.watch();
 
 function setConfigOnSession(req, res, next) {
-  //     console.log(chalk`
-  // {blue ${new Date().toISOString()}}
-  // `);
   const testConfig = config.get();
   const scenarioRuns = req.session?.unirouter?.scenarioRuns || {};
-  const scenarioKey = `${testConfig.project}:${testConfig.scenario}`;
+  const scenarioKey = `${testConfig.project}:${testConfig.scenario}`.toUpperCase();
 
   req.session.unirouter = merge(
     {
@@ -44,7 +41,9 @@ function findRoute(req, res, next) {
   let route;
 
   try {
-    route = routes[project][scenario];
+    const tests = getValueByKey(project, routes);
+
+    route = getValueByKey(scenario, tests);
 
     // project may be defined, but not scenario.
     if (!route) {
@@ -87,7 +86,6 @@ function sendResponse(req, res, next) {
   const { status, response } = route.responses[runNumber - 1];
 
   if (req.session.unirouter.isLastScenarioResponse) {
-    // console.log("Destroying session...");
     req.uniSessionDestroyed = true;
     req.session.destroy(noop);
   }
@@ -100,7 +98,6 @@ function sendResponse(req, res, next) {
 
 const unirouterMiddlewares = [
   logs.reqInit,
-  // setLoggerOnRequest,
   setConfigOnSession,
   findRoute,
   logs.reqRoute,
