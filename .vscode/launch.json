@@ -10,6 +10,9 @@
       "name": "Debug File",
       "program": "${file}",
       // "runtimeArgs": ["--harmony"], //"-r", "esm"],
+      "env": {
+        "PORT": "3001"
+      },
       "sourceMaps": true,
       "smartStep": true,
       "skipFiles": [
