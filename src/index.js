@@ -57,10 +57,4 @@ app.get("/", async (req, res) => {
   );
 });
 
-// TODO:
-// Is this needed?
-// app.get("/favicon.ico", (req, res) => {
-//   res.status(200).end();
-// });
-
 app.listen(PORT);

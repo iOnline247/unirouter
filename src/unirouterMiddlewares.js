@@ -12,6 +12,16 @@ const config = new ConfigManager(configFilePath);
 
 config.watch();
 
+// This prevents the browser from sending a favicon request automatically
+// and causing the responses to be out of order.
+function nopeFavIcon(req, res, next) {
+  if (req.originalUrl === "/favicon.ico") {
+    res.send("");
+  } else {
+    next();
+  }
+}
+
 function setConfigOnSession(req, res, next) {
   const testConfig = config.get();
   const scenarioRuns = req.session?.unirouter?.scenarioRuns || {};
@@ -97,6 +107,7 @@ function sendResponse(req, res, next) {
 }
 
 const unirouterMiddlewares = [
+  nopeFavIcon,
   logs.reqInit,
   setConfigOnSession,
   findRoute,
