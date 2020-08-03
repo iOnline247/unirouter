@@ -1,5 +1,6 @@
 import path from "path";
 
+import chalk from "chalk";
 import merge from "deepmerge";
 import morgan from "morgan";
 
@@ -14,7 +15,12 @@ const config = new ConfigManager(configFilePath);
 config.watch();
 
 morgan.token("id", (req) => req.id);
-morgan.token("scenarioKey", (req) => req.scenarioKey);
+morgan.token("delay", (req) => `${req.uniReqDelay}`);
+morgan.token("scenarioKey", (req) => req.uniScenarioKey);
+morgan.token(
+  "sessionDestroyed",
+  (req) => `${req.uniSessionDestroyed || false}`
+);
 
 // function setLoggerOnRequest(req, res, next) {
 //   req.logger = new Logger(req.id);
@@ -45,7 +51,12 @@ function setConfigOnSession(req, res, next) {
 }
 
 function findRoute(req, res, next) {
-  const { project, scenario, scenarioKey } = req.session.unirouter;
+  const { delaysInMs, project, scenario, scenarioKey } = req.session.unirouter;
+  // TODO:
+  // Put delay on the req object.
+  const runNumber = req.session.unirouter.scenarioRuns[scenarioKey];
+  const delay = delaysInMs[runNumber - 1];
+
   let route;
 
   try {
@@ -59,7 +70,8 @@ function findRoute(req, res, next) {
     }
 
     req.session.unirouter.route = route;
-    req.scenarioKey = scenarioKey;
+    req.uniReqDelay = delay;
+    req.uniScenarioKey = scenarioKey;
 
     next();
   } catch (err) {
@@ -71,6 +83,8 @@ function findRoute(req, res, next) {
 
 async function delayRequest(req, res, next) {
   const { delaysInMs, route } = req.session.unirouter;
+  // TODO:
+  // Put delay on the req object.
   const runNumber =
     req.session.unirouter.scenarioRuns[req.session.unirouter.scenarioKey];
   const delay = delaysInMs[runNumber - 1];
@@ -90,6 +104,7 @@ function sendResponse(req, res, next) {
 
   if (req.session.unirouter.isLastScenarioResponse) {
     // console.log("Destroying session...");
+    req.uniSessionDestroyed = true;
     req.session.destroy(noop);
   }
   // TODO:
@@ -104,10 +119,12 @@ const unirouterMiddlewares = [
   // setLoggerOnRequest,
   setConfigOnSession,
   findRoute,
-  morgan("[:date[iso]] :id Route found :scenarioKey"),
+  morgan("[:date[iso]] :id Route found :scenarioKey, will delay for :delay ms"),
   delayRequest,
   sendResponse,
-  morgan("dev"),
+  morgan(
+    chalk`{blue [:date[iso]]} {yellow :id} :method :url :status Session destroyed - :sessionDestroyed`
+  ),
 ];
 
 export default unirouterMiddlewares;
