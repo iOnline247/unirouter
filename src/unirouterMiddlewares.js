@@ -13,9 +13,6 @@ const config = new ConfigManager(configFilePath);
 config.watch();
 
 function setConfigOnSession(req, res, next) {
-  //     console.log(chalk`
-  // {blue ${new Date().toISOString()}}
-  // `);
   const testConfig = config.get();
   const scenarioRuns = req.session?.unirouter?.scenarioRuns || {};
   const scenarioKey = `${testConfig.project}:${testConfig.scenario}`.toUpperCase();
