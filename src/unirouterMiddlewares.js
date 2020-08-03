@@ -1,10 +1,10 @@
 import path from "path";
 
 import merge from "deepmerge";
-import morgan from "morgan";
 
 import { noop, sleep } from "./utils/common.js";
 import ConfigManager from "./utils/configManager.js";
+import logs from "./utils/logs.js";
 import { routes } from "./routes/index.js";
 
 const configFilePath = path.join(__dirname, "./config.json");
@@ -12,7 +12,7 @@ const config = new ConfigManager(configFilePath);
 
 config.watch();
 
-function setConfigOnRequest(req, res, next) {
+function setConfigOnSession(req, res, next) {
   //     console.log(chalk`
   // {blue ${new Date().toISOString()}}
   // `);
@@ -35,7 +35,12 @@ function setConfigOnRequest(req, res, next) {
 }
 
 function findRoute(req, res, next) {
-  const { project, scenario, scenarioKey } = req.session.unirouter;
+  const { delaysInMs, project, scenario, scenarioKey } = req.session.unirouter;
+  // TODO:
+  // Put delay on the req object.
+  const runNumber = req.session.unirouter.scenarioRuns[scenarioKey];
+  const delay = delaysInMs[runNumber - 1];
+
   let route;
 
   try {
@@ -49,20 +54,21 @@ function findRoute(req, res, next) {
     }
 
     req.session.unirouter.route = route;
+    req.uniReqDelay = delay;
+    req.uniScenarioKey = scenarioKey;
 
-    console.log(`Route found: ${scenarioKey}`);
     next();
   } catch (err) {
     const errorMsg = `Couldn't find the ${scenarioKey} in the 'routes' directory.`;
 
-    console.error(errorMsg);
-    console.error(err);
     res.status(500).send(errorMsg);
   }
 }
 
 async function delayRequest(req, res, next) {
   const { delaysInMs, route } = req.session.unirouter;
+  // TODO:
+  // Put delay on the req object.
   const runNumber =
     req.session.unirouter.scenarioRuns[req.session.unirouter.scenarioKey];
   const delay = delaysInMs[runNumber - 1];
@@ -81,7 +87,8 @@ function sendResponse(req, res, next) {
   const { status, response } = route.responses[runNumber - 1];
 
   if (req.session.unirouter.isLastScenarioResponse) {
-    console.log("Destroying session...");
+    // console.log("Destroying session...");
+    req.uniSessionDestroyed = true;
     req.session.destroy(noop);
   }
   // TODO:
@@ -92,11 +99,14 @@ function sendResponse(req, res, next) {
 }
 
 const unirouterMiddlewares = [
-  setConfigOnRequest,
+  logs.reqInit,
+  // setLoggerOnRequest,
+  setConfigOnSession,
   findRoute,
+  logs.reqRoute,
   delayRequest,
   sendResponse,
-  morgan("dev"),
+  logs.reqOutro,
 ];
 
 export default unirouterMiddlewares;

@@ -1,12 +1,16 @@
+/* eslint-disable no-console */
 import fs from "fs";
 import { readFile } from "fs/promises";
 
 import chalk from "chalk";
 import merge from "deepmerge";
 
+// import Logger from "./logger.js";
+
 const importedConfig = require("../config.json");
 
 const config = merge({}, importedConfig);
+// const logger = new Logger();
 
 // Interesting topics.
 // https://stackoverflow.com/a/50477084
@@ -50,7 +54,7 @@ class ConfigManager {
   }
 
   get() {
-    return this.#config;
+    return merge({}, this.#config);
   }
 }
 
