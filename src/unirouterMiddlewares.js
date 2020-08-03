@@ -86,7 +86,6 @@ function sendResponse(req, res, next) {
   const { status, response } = route.responses[runNumber - 1];
 
   if (req.session.unirouter.isLastScenarioResponse) {
-    // console.log("Destroying session...");
     req.uniSessionDestroyed = true;
     req.session.destroy(noop);
   }
@@ -99,7 +98,6 @@ function sendResponse(req, res, next) {
 
 const unirouterMiddlewares = [
   logs.reqInit,
-  // setLoggerOnRequest,
   setConfigOnSession,
   findRoute,
   logs.reqRoute,
