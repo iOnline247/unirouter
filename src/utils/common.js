@@ -9,5 +9,24 @@ const getValueByKey = (prop, obj) => {
 
   return obj[key];
 };
+const debounce = (func, wait, immediate) => {
+  let timeout;
+  return (...args) => {
+    const later = function later() {
+      timeout = null;
+      if (!immediate) {
+        func(...args);
+      }
+    };
+    const callNow = immediate && !timeout;
 
-export { getValueByKey, noop, sleep };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+
+    if (callNow) {
+      func(...args);
+    }
+  };
+};
+
+export { debounce, getValueByKey, noop, sleep };
