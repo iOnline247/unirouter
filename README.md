@@ -20,7 +20,7 @@ The [./src](./src) directory contains the [config.json](./src/config.json) file.
 
 To change to a new scenario, type the project name and the scenario. Both are case-insensitive.
 
-**NOTE**: Using the instructions above, the active `config.json` file will be in the `./dist` directory. 
+**NOTE**: Using the `F5` debugging instructions above, the active `config.json` file will be in the `./dist` directory. 
 
 ### Creating a new scenario
 
