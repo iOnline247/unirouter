@@ -18,7 +18,7 @@ const getData = async () => {
 };
 
 (async function () {
-  const promisees = [getData(), getData(), getData()];
+  const promiseeeees = [getData(), getData(), getData()];
 
-  await Promise.all(promisees);
+  await Promise.all(promiseeeees);
 })();
