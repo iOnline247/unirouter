@@ -5,7 +5,7 @@ import merge from "deepmerge";
 import { getValueByKey, noop, sleep } from "./utils/common.js";
 import ConfigManager from "./utils/configManager.js";
 import logs from "./utils/logs.js";
-import { routes } from "./routes/index.js";
+import routes from "./routes/index.js";
 
 const configFilePath = path.join(__dirname, "./config.json");
 const config = new ConfigManager(configFilePath);
