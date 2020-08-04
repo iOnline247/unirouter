@@ -13,6 +13,7 @@ app.use(addRequestId());
 // TODO:
 // Is this needed? This was added, so the server
 // didn't have restrictions on where the request originated.
+// @ts-ignore
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -32,6 +33,7 @@ app.use(
 // didn't have restrictions on where the request originated.
 app.use(
   cors({
+    // @ts-ignore
     origin(origin, callback) {
       return callback(null, true);
     },
@@ -51,6 +53,7 @@ app.use(
 
 app.all("*/:route", ...unirouterMiddlewares);
 
+// @ts-ignore
 app.get("/", async (req, res) => {
   res.send(
     `<h1>Hola, mundo desde unirouter. <span style="color: #FF4136;">&#9829;</span></h1>`
