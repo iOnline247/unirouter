@@ -1,10 +1,10 @@
 import path from "path";
 
 import merge from "deepmerge";
-import morgan from "morgan";
 
-import { noop, sleep } from "./utils/common.js";
+import { getValueByKey, noop, sleep } from "./utils/common.js";
 import ConfigManager from "./utils/configManager.js";
+import logs from "./utils/logs.js";
 import { routes } from "./routes/index.js";
 
 const configFilePath = path.join(__dirname, "./config.json");
@@ -12,13 +12,21 @@ const config = new ConfigManager(configFilePath);
 
 config.watch();
 
-function setConfigOnRequest(req, res, next) {
-  //     console.log(chalk`
-  // {blue ${new Date().toISOString()}}
-  // `);
+// This prevents the browser from sending a favicon request automatically
+// and causing the responses to be out of order.
+function nopeFavIcon(req, res, next) {
+  if (req.originalUrl === "/favicon.ico") {
+    res.send("");
+  } else {
+    next();
+  }
+}
+
+// @ts-ignore
+function setConfigOnSession(req, res, next) {
   const testConfig = config.get();
   const scenarioRuns = req.session?.unirouter?.scenarioRuns || {};
-  const scenarioKey = `${testConfig.project}:${testConfig.scenario}`;
+  const scenarioKey = `${testConfig.project}:${testConfig.scenario}`.toUpperCase();
 
   req.session.unirouter = merge(
     {
@@ -35,11 +43,18 @@ function setConfigOnRequest(req, res, next) {
 }
 
 function findRoute(req, res, next) {
-  const { project, scenario, scenarioKey } = req.session.unirouter;
+  const { delaysInMs, project, scenario, scenarioKey } = req.session.unirouter;
+  // TODO:
+  // Put delay on the req object.
+  const runNumber = req.session.unirouter.scenarioRuns[scenarioKey];
+  const delay = delaysInMs[runNumber - 1];
+
   let route;
 
   try {
-    route = routes[project][scenario];
+    const tests = getValueByKey(project, routes);
+
+    route = getValueByKey(scenario, tests);
 
     // project may be defined, but not scenario.
     if (!route) {
@@ -49,20 +64,22 @@ function findRoute(req, res, next) {
     }
 
     req.session.unirouter.route = route;
+    req.uniReqDelay = delay;
+    req.uniScenarioKey = scenarioKey;
 
-    console.log(`Route found: ${scenarioKey}`);
     next();
   } catch (err) {
     const errorMsg = `Couldn't find the ${scenarioKey} in the 'routes' directory.`;
 
-    console.error(errorMsg);
-    console.error(err);
     res.status(500).send(errorMsg);
   }
 }
 
+// @ts-ignore
 async function delayRequest(req, res, next) {
   const { delaysInMs, route } = req.session.unirouter;
+  // TODO:
+  // Put delay on the req object.
   const runNumber =
     req.session.unirouter.scenarioRuns[req.session.unirouter.scenarioKey];
   const delay = delaysInMs[runNumber - 1];
@@ -81,7 +98,7 @@ function sendResponse(req, res, next) {
   const { status, response } = route.responses[runNumber - 1];
 
   if (req.session.unirouter.isLastScenarioResponse) {
-    console.log("Destroying session...");
+    req.uniSessionDestroyed = true;
     req.session.destroy(noop);
   }
   // TODO:
@@ -92,11 +109,14 @@ function sendResponse(req, res, next) {
 }
 
 const unirouterMiddlewares = [
-  setConfigOnRequest,
+  nopeFavIcon,
+  logs.reqInit,
+  setConfigOnSession,
   findRoute,
+  logs.reqRoute,
   delayRequest,
   sendResponse,
-  morgan("dev"),
+  logs.reqOutro,
 ];
 
 export default unirouterMiddlewares;
