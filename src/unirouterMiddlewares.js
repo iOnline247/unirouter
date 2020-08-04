@@ -22,6 +22,7 @@ function nopeFavIcon(req, res, next) {
   }
 }
 
+// @ts-ignore
 function setConfigOnSession(req, res, next) {
   const testConfig = config.get();
   const scenarioRuns = req.session?.unirouter?.scenarioRuns || {};
@@ -74,6 +75,7 @@ function findRoute(req, res, next) {
   }
 }
 
+// @ts-ignore
 async function delayRequest(req, res, next) {
   const { delaysInMs, route } = req.session.unirouter;
   // TODO:
