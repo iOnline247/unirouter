@@ -101,10 +101,23 @@ function sendResponse(req, res, next) {
     req.uniSessionDestroyed = true;
     req.session.destroy(noop);
   }
-  // TODO:
-  // Support multiple Content-Types
-  // http://expressjs.com/en/4x/api.html#res.format
-  res.status(status).json(response);
+
+  res.format({
+    "text/plain": function textRes() {
+      res.status(status).send(response);
+    },
+    "application/json": function jsonRes() {
+      res.status(status).json(response);
+    },
+    "application/xml": function xmlRes() {
+      res.set("Content-Type", "application/xml");
+      res.status(status).send(response);
+    },
+    default() {
+      res.status(406).send("Not Acceptable");
+    },
+  });
+
   next();
 }
 
