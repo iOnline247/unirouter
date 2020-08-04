@@ -7,7 +7,7 @@ The responses will be sent in the same order that they're declared within the sc
 
 ### Containerized
 
-Open this project with VSCode. Since this project has a `.devcontainer` folder, you'll be prompted to reopen in the container. Once the container is running, at the shell prompt run this command: `npm install`. After the dependencies are installed, press `F5` and the unirouter will be running on port 3000.
+Open this project with VSCode. Since this project has a `.devcontainer` folder, you'll be prompted to reopen in the container. Once the container is running, at the shell prompt run this command: `npm install`. After the dependencies are installed, press `F5` and the unirouter will be running on port 3000. If docker isn't installed, [level yourself up](https://code.visualstudio.com/docs/remote/containers#_getting-started).
 
 ### Normal Usage
 
