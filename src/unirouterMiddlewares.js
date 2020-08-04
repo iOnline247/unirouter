@@ -113,9 +113,6 @@ function sendResponse(req, res, next) {
       res.set("Content-Type", "application/xml");
       res.status(status).send(response);
     },
-    default() {
-      res.status(406).send("Not Acceptable");
-    },
   });
 
   next();
