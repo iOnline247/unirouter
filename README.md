@@ -20,11 +20,11 @@ The [./src](./src) directory contains the [config.json](./src/config.json) file.
 
 To change to a new scenario, type the project name and the scenario. Both are case-insensitive.
 
-**NOTE**: Using the `F5` debugging instructions above, the active `config.json` file will be in the `./dist` directory. 
+**NOTE**: Using the `F5` debugging instructions above, the active `config.json` file will be in the `./dist` directory.
 
 ### Creating a new scenario
 
-All of the scenarios are kept under the [./src/routes](./src/routes) directory. Within this directory, create a new JavaScript file. Create a variable and name it what the project is. Within this object, each key will represent a `scenario`. Each scenario will require a key named `responses`, which is an array of responses.
+All of the scenarios are kept under the [./src/fixtures](./src/fixtures) directory. Within this directory, create a new JavaScript file. Create a variable and name it what the project is. Within this object, each key will represent a `scenario`. Each scenario will require a key named `responses`, which is an array of responses.
 
 For each response, the `status` and `response` keys are required.
 
@@ -71,7 +71,7 @@ const sentinel = {
 export default sentinel;
 ```
 
-Once this file is created, open the [`./src/routes/index.js`](./src/routes/index.js) file and `import` the new project and add to the `routes` variable as a new key/value.
+Once this file is created, open the [`./src/fixtures/index.js`](./src/fixtures/index.js) file and `import` the new project and add to the `routes` variable as a new key/value.
 
 ```javascript
 const routes = {
