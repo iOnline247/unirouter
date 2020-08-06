@@ -46,7 +46,7 @@ class ConfigManager {
             this.#config = {
               project: "",
               scenario: "",
-              delaysInMs: [],
+              delaysInMs: []
             };
 
             console.error(

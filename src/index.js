@@ -1,6 +1,5 @@
 import express from "express";
 import addRequestId from "express-request-id";
-import session from "express-session";
 import csp from "helmet-csp";
 import cors from "cors";
 
@@ -10,6 +9,7 @@ const { PORT = 3000 } = process.env;
 const app = express();
 
 app.use(addRequestId());
+
 // TODO:
 // Is this needed? This was added, so the server
 // didn't have restrictions on where the request originated.
@@ -20,14 +20,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Headers", "*");
   next();
 });
-app.use(
-  session({
-    secret: "super secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: { sameSite: "strict" },
-  })
-);
+
 // TODO:
 // Is this needed? This was added, so the server
 // didn't have restrictions on where the request originated.
@@ -36,7 +29,7 @@ app.use(
     // @ts-ignore
     origin(origin, callback) {
       return callback(null, true);
-    },
+    }
   })
 );
 // TODO:
@@ -46,12 +39,15 @@ app.use(
 app.use(
   csp({
     directives: {
-      scriptSrc: ["'unsafe-inline'", "'unsafe-eval'"],
-    },
+      scriptSrc: ["'unsafe-inline'", "'unsafe-eval'"]
+    }
   })
 );
 
-app.all("*/:route", ...unirouterMiddlewares);
+// @ts-ignore
+app.get("/favicon.ico", async (req, res) => {
+  res.status(200).send("");
+});
 
 // @ts-ignore
 app.get("/", async (req, res) => {
@@ -60,4 +56,8 @@ app.get("/", async (req, res) => {
   );
 });
 
-app.listen(PORT);
+app.all("*/:route", ...unirouterMiddlewares);
+app.listen(PORT, function serverInit() {
+  // eslint-disable-next-line no-console
+  console.log(`unirouter is listening on: http://localhost:${PORT}`);
+});
