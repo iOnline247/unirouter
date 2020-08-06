@@ -5,7 +5,7 @@ import soap from "./soap.js";
 const routes = {
   myProject,
   sentinel,
-  soap,
+  soap
 };
 
 export default routes;
