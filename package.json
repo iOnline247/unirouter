@@ -34,7 +34,6 @@
     "deepmerge": "^4.2.2",
     "express": "^4.17.1",
     "express-request-id": "^1.4.1",
-    "helmet-csp": "^2.10.0",
     "morgan": "^1.10.0"
   },
   "devDependencies": {

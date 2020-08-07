@@ -16,16 +16,23 @@ function setConfigOnSession(req, res, next) {
   req.unirouter = config.get();
 
   const scenarioKey = `${req.unirouter.project}:${req.unirouter.scenario}`.toUpperCase();
+  const runNumber = (sessionState[scenarioKey] || 0) + 1;
 
   req.unirouter.scenarioKey = scenarioKey;
-  sessionState[scenarioKey] = (sessionState[scenarioKey] || 0) + 1;
-  req.unirouter.runNumber = sessionState[scenarioKey];
+  req.unirouter.runNumber = runNumber;
+  sessionState[scenarioKey] = runNumber;
 
   next();
 }
 
 function findRoute(req, res, next) {
-  const { delaysInMs, project, scenario, scenarioKey } = req.unirouter;
+  const {
+    delaysInMs,
+    project,
+    runNumber,
+    scenario,
+    scenarioKey,
+  } = req.unirouter;
 
   try {
     const tests = getValueByKey(project, routes);
@@ -38,9 +45,9 @@ function findRoute(req, res, next) {
       );
     }
 
-    const runNumber = sessionState[scenarioKey];
     const scenarioIdx = runNumber - 1;
-    const delay = route.responses[scenarioIdx].delay ?? delaysInMs[scenarioIdx];
+    const delay =
+      route.responses?.[scenarioIdx]?.delay ?? delaysInMs[scenarioIdx];
 
     req.unirouter.route = route;
     req.unirouter.delay = delay;
@@ -49,6 +56,9 @@ function findRoute(req, res, next) {
 
     next();
   } catch (err) {
+    // TODO:
+    // Figure out the bug with asyncie.js tests.
+    console.error(`runNumber: ${runNumber}`);
     res.status(500).send(`[unirouter]: ${err.message}, ${err.stack}`);
   }
 }
@@ -71,6 +81,9 @@ function sendResponse(req, res, next) {
   try {
     ({ contentType, status, response } = route.responses[runNumber - 1]);
   } catch (err) {
+    // TODO:
+    // Add the same logging that will be used for the above `try/catch`
+    // in `findRoute`.
     /* eslint-disable no-console */
     console.error(`runNumber: ${runNumber}`);
     console.error(JSON.stringify(req.unirouter));
@@ -108,7 +121,7 @@ function sendResponse(req, res, next) {
       "application/xml": function xmlRes() {
         res.set("Content-Type", "application/xml");
         res.status(status).send(response);
-      }
+      },
     });
   }
 
@@ -122,7 +135,7 @@ const unirouterMiddlewares = [
   logs.reqRoute,
   delayRequest,
   sendResponse,
-  logs.reqOutro
+  logs.reqOutro,
 ];
 
 export default unirouterMiddlewares;
