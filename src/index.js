@@ -1,6 +1,5 @@
 import express from "express";
 import addRequestId from "express-request-id";
-import csp from "helmet-csp";
 import cors from "cors";
 
 import unirouterMiddlewares from "./unirouterMiddlewares";
@@ -10,9 +9,6 @@ const app = express();
 
 app.use(addRequestId());
 
-// TODO:
-// Is this needed? This was added, so the server
-// didn't have restrictions on where the request originated.
 // @ts-ignore
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -21,25 +17,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// TODO:
-// Is this needed? This was added, so the server
-// didn't have restrictions on where the request originated.
 app.use(
   cors({
     // @ts-ignore
     origin(origin, callback) {
       return callback(null, true);
-    }
-  })
-);
-// TODO:
-// Is this needed? This was added, so `fetch` would work
-// in the browser dev tools.
-// NOTE: FF blocks `fetch`
-app.use(
-  csp({
-    directives: {
-      scriptSrc: ["'unsafe-inline'", "'unsafe-eval'"]
     }
   })
 );
