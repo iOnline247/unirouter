@@ -9,6 +9,9 @@ const configFilePath = path.join(__dirname, "./config.json");
 const config = new ConfigManager(configFilePath);
 const sessionState = {};
 
+let willQueueSubsequentResponses = false;
+let responseSleepingRunNumber = null;
+
 config.watch();
 
 // @ts-ignore
@@ -65,9 +68,33 @@ function findRoute(req, res, next) {
 
 // @ts-ignore
 async function delayRequest(req, res, next) {
-  const { delay } = req.unirouter;
+  const { delay, runNumber } = req.unirouter;
 
-  await sleep(delay);
+  if (willQueueSubsequentResponses) {
+    while (runNumber > responseSleepingRunNumber) {
+      // eslint-disable-next-line no-await-in-loop
+      await sleep(10);
+
+      // Breakout the subsquent request only.
+      const breakoutLoop =
+        !willQueueSubsequentResponses &&
+        runNumber === responseSleepingRunNumber + 1;
+
+      if (breakoutLoop) {
+        break;
+      }
+    }
+  }
+
+  if (delay > 0) {
+    willQueueSubsequentResponses = true;
+    responseSleepingRunNumber = runNumber;
+
+    await sleep(delay);
+
+    willQueueSubsequentResponses = false;
+  }
+
   next();
 }
 
