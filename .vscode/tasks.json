@@ -1,6 +1,7 @@
 {
   "version": "2.0.0",
   "tasks": [
+    // https://github.com/microsoft/vscode-recipes/blob/master/Docker-TypeScript/package.json
     {
       "type": "npm",
       "script": "tsc:watch",
