@@ -7,7 +7,8 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug File",
+      "name": "Start DEV",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/nodemon",
       "program": "${workspaceFolder}/dist/index.js",
       // "runtimeArgs": ["--harmony"], //"-r", "esm"],
       "env": {
@@ -19,7 +20,11 @@
         "${workspaceFolder}/node_modules/**/*.js",
         "<node_internals>/**/*.js"
       ],
-      "autoAttachChildProcesses": true
+      "autoAttachChildProcesses": true,
+      "restart": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "preLaunchTask": "npm: tsc:watch"
     }
   ]
 }

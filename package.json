@@ -6,8 +6,7 @@
   "scripts": {
     "build": "npm run clean:dist && tsc",
     "clean:dist": "del-cli ./dist ./.ts",
-    "dev": "npm run clean:dist && tsc --watch",
-    "start": "nodemon ./dist/index.js",
+    "tsc:watch": "npm run clean:dist && tsc --watch",
     "lint:base": "eslint --ignore-path .gitignore",
     "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
