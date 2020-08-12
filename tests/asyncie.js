@@ -16,9 +16,19 @@ const getData = async () => {
 
   return output;
 };
+const sleep = function sleep(waitMs) {
+  return new Promise((resolve) => setTimeout(resolve, waitMs));
+};
 
-(async function () {
-  const promiseeeees = [getData(), getData(), getData()];
+(async function init() {
+  const promiseeeees = [];
 
-  await Promise.all(promiseeeees);
+  for (let i = 0; i < 3; i++) {
+    // eslint-disable-next-line no-await-in-loop
+    await sleep(10);
+    promiseeeees.push(getData());
+  }
+
+  const responses = await Promise.all(promiseeeees);
+  console.log(responses);
 })();
