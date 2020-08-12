@@ -1,115 +1,134 @@
 import path from "path";
 
-import merge from "deepmerge";
-
-import { getValueByKey, noop, sleep } from "./utils/common.js";
+import { getValueByKey, sleep } from "./utils/common.js";
 import ConfigManager from "./utils/configManager.js";
 import logs from "./utils/logs.js";
-import { routes } from "./routes/index.js";
+import routes from "./fixtures/index.js";
 
 const configFilePath = path.join(__dirname, "./config.json");
 const config = new ConfigManager(configFilePath);
+const sessionState = {};
 
 config.watch();
 
-// This prevents the browser from sending a favicon request automatically
-// and causing the responses to be out of order.
-function nopeFavIcon(req, res, next) {
-  if (req.originalUrl === "/favicon.ico") {
-    res.send("");
-  } else {
-    next();
-  }
-}
-
 // @ts-ignore
 function setConfigOnSession(req, res, next) {
-  const testConfig = config.get();
-  const scenarioRuns = req.session?.unirouter?.scenarioRuns || {};
-  const scenarioKey = `${testConfig.project}:${testConfig.scenario}`.toUpperCase();
+  req.unirouter = config.get();
 
-  req.session.unirouter = merge(
-    {
-      ...testConfig,
-      scenarioKey,
-    },
-    { scenarioRuns }
-  );
+  const scenarioKey = `${req.unirouter.project}:${req.unirouter.scenario}`.toUpperCase();
+  const runNumber = (sessionState[scenarioKey] || 0) + 1;
 
-  req.session.unirouter.scenarioRuns[scenarioKey] =
-    (req.session.unirouter.scenarioRuns[scenarioKey] || 0) + 1;
+  req.unirouter.scenarioKey = scenarioKey;
+  req.unirouter.runNumber = runNumber;
+  sessionState[scenarioKey] = runNumber;
 
   next();
 }
 
 function findRoute(req, res, next) {
-  const { delaysInMs, project, scenario, scenarioKey } = req.session.unirouter;
-  // TODO:
-  // Put delay on the req object.
-  const runNumber = req.session.unirouter.scenarioRuns[scenarioKey];
-  const delay = delaysInMs[runNumber - 1];
-
-  let route;
+  const {
+    delaysInMs,
+    project,
+    runNumber,
+    scenario,
+    scenarioKey,
+  } = req.unirouter;
 
   try {
     const tests = getValueByKey(project, routes);
-
-    route = getValueByKey(scenario, tests);
+    const route = getValueByKey(scenario, tests);
 
     // project may be defined, but not scenario.
     if (!route) {
       throw new Error(
-        `Couldn't find the ${scenarioKey} in the 'routes' directory.`
+        `Couldn't find the ${scenarioKey} in the 'fixtures' directory.`
       );
     }
 
-    req.session.unirouter.route = route;
+    const scenarioIdx = runNumber - 1;
+    const delay =
+      route.responses?.[scenarioIdx]?.delay ?? delaysInMs[scenarioIdx];
+
+    req.unirouter.route = route;
+    req.unirouter.delay = delay;
     req.uniReqDelay = delay;
     req.uniScenarioKey = scenarioKey;
 
     next();
   } catch (err) {
-    const errorMsg = `Couldn't find the ${scenarioKey} in the 'routes' directory.`;
-
-    res.status(500).send(errorMsg);
+    // TODO:
+    // Figure out the bug with asyncie.js tests.
+    console.error(`runNumber: ${runNumber}`);
+    res.status(500).send(`[unirouter]: ${err.message}, ${err.stack}`);
   }
 }
 
 // @ts-ignore
 async function delayRequest(req, res, next) {
-  const { delaysInMs, route } = req.session.unirouter;
-  // TODO:
-  // Put delay on the req object.
-  const runNumber =
-    req.session.unirouter.scenarioRuns[req.session.unirouter.scenarioKey];
-  const delay = delaysInMs[runNumber - 1];
-
-  req.session.unirouter.isLastScenarioResponse =
-    route.responses.length === runNumber;
+  const { delay } = req.unirouter;
 
   await sleep(delay);
   next();
 }
 
 function sendResponse(req, res, next) {
-  const { route } = req.session.unirouter;
-  const runNumber =
-    req.session.unirouter.scenarioRuns[req.session.unirouter.scenarioKey];
-  const { status, response } = route.responses[runNumber - 1];
+  const { route, runNumber } = req.unirouter;
 
-  if (req.session.unirouter.isLastScenarioResponse) {
-    req.uniSessionDestroyed = true;
-    req.session.destroy(noop);
+  let contentType;
+  let status;
+  let response;
+
+  try {
+    ({ contentType, status, response } = route.responses[runNumber - 1]);
+  } catch (err) {
+    // TODO:
+    // Add the same logging that will be used for the above `try/catch`
+    // in `findRoute`.
+    /* eslint-disable no-console */
+    console.error(`runNumber: ${runNumber}`);
+    console.error(JSON.stringify(req.unirouter));
+    /* eslint-enable no-console */
+
+    res
+      .status(500)
+      .send("[unirouter]: Error with sessionState. This should never occur.");
+
+    return;
   }
-  // TODO:
-  // Support multiple Content-Types
-  // http://expressjs.com/en/4x/api.html#res.format
-  res.status(status).json(response);
+
+  const isLastScenarioResponse = route.responses.length === runNumber;
+
+  if (isLastScenarioResponse) {
+    req.uniSessionDestroyed = true;
+    sessionState[req.unirouter.scenarioKey] = 0;
+  }
+
+  if (contentType) {
+    res.set("Content-Type", contentType);
+    res.status(status).send(response);
+  } else {
+    res.format({
+      "text/plain": function textRes() {
+        res.status(status).send(response);
+      },
+      "text/html": function htmlRes() {
+        res.set("Content-Type", "text/html");
+        res.status(status).send(response);
+      },
+      "application/json": function jsonRes() {
+        res.status(status).json(response);
+      },
+      "application/xml": function xmlRes() {
+        res.set("Content-Type", "application/xml");
+        res.status(status).send(response);
+      },
+    });
+  }
+
   next();
 }
 
 const unirouterMiddlewares = [
-  nopeFavIcon,
   logs.reqInit,
   setConfigOnSession,
   findRoute,

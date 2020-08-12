@@ -1,10 +1,11 @@
 import myProject from "./myProject.js";
 import sentinel from "./sentinel.js";
+import soap from "./soap.js";
 
 const routes = {
   myProject,
   sentinel,
+  soap
 };
 
-// eslint-disable-next-line import/prefer-default-export
-export { routes };
+export default routes;
