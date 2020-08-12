@@ -49,5 +49,11 @@
     "nodemon": "^2.0.4",
     "prettier-eslint": "^11.0.0",
     "typescript": "^4.0.0-dev.20200725"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "src/config.json",
+      "dist/config.json"
+    ]
   }
 }
