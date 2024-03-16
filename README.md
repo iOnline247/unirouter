@@ -1,6 +1,6 @@
 # unirouter
 
-Orchestrate API responses to any endpoint. Send your requests to where this server is hosted, and the API server will respond to any endpoint requested. e.g. POST http://localhost:3000/resource/id, DELETE http://localhost:3000/entity/id/action.
+Orchestrate API responses to any endpoint. Send your requests to where this server is hosted, and the API server will respond to any endpoint requested. e.g. POST http://localhost:3000/resource/id, DELETE http://localhost:3000/entity/action/id.
 The responses will be sent in the same order that they're declared within the scenario being tested.
 
 ## Usage
